@@ -1,0 +1,733 @@
+@model List<AccountItERP.Models.Payment>
+
+@{
+    ViewData["Title"] = "Payment Tracking";
+
+    var availableInvoices =
+        ViewBag.AvailableInvoices as List<AccountItERP.Models.Invoice>
+        ?? new List<AccountItERP.Models.Invoice>();
+
+    var allInvoices =
+        ViewBag.AllInvoices as List<AccountItERP.Models.Invoice>
+        ?? new List<AccountItERP.Models.Invoice>();
+
+    var paidTotals =
+        ViewBag.InvoicePaidTotals as Dictionary<int, decimal>
+        ?? new Dictionary<int, decimal>();
+
+    var installmentPaidCounts =
+        ViewBag.InstallmentPaidCounts as Dictionary<int, int>
+        ?? new Dictionary<int, int>();
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dashboard.css" />
+}
+
+<div class="user-management-page">
+
+    <div class="page-title d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>Payment Tracking</h2>
+            <p>Track invoice payments and payment details.</p>
+        </div>
+
+        <button type="button"
+                class="btn btn-primary px-4"
+                data-bs-toggle="modal"
+                data-bs-target="#createPaymentModal">
+            + Add Payment
+        </button>
+    </div>
+
+    <div class="dashboard-card">
+
+        <form asp-controller="Payment"
+            asp-action="Index"
+            method="get"
+            class="mb-4">
+
+            <div class="input-group search-group">
+
+                <input type="text"
+                    name="search"
+                    value="@ViewBag.Search"
+                    class="form-control"
+                    placeholder="Search invoice number or customer..." />
+
+                <button type="submit"
+                        class="btn btn-primary px-4">
+                    Search
+                </button>
+
+                @if (!string.IsNullOrWhiteSpace(ViewBag.Search))
+                {
+                    <a asp-controller="Payment"
+                    asp-action="Index"
+                    class="btn btn-outline-secondary">
+                        Clear
+                    </a>
+                }
+
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table align-middle user-table">
+                <thead>
+                    <tr>
+                        <th>Invoice No.</th>
+                        <th>Customer/Vendor</th>
+                        <th>Amount Paid</th>
+                        <th>Payment Date</th>
+                        <th>Method</th>
+                        <th>Installment Progress</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var payment in Model)
+                    {
+                        var totalMonths = payment.Invoice?.InstallmentMonths ?? 0;
+
+                        var paidMonths = installmentPaidCounts.ContainsKey(payment.InvoiceID)
+                            ? installmentPaidCounts[payment.InvoiceID]
+                            : 0;
+
+                        var monthsLeft = Math.Max(0, totalMonths - paidMonths);
+
+                    
+                        <tr>
+                            <td><strong>@payment.Invoice?.InvoiceNumber</strong></td>
+                            <td>@payment.CustomerVendor?.Name</td>
+
+                            <td>
+                                <span class="payment-amount">
+                                    ₱@payment.AmountPaid.ToString("N2")
+                                </span>
+                            </td>
+
+                            <td>@payment.PaymentDate.ToString("MMM dd, yyyy")</td>
+
+                            <td>
+                                <span class="payment-method-pill">
+                                    @payment.PaymentMethod
+                                </span>
+                            </td>
+
+                            <td>
+                                @if (payment.Invoice?.IsInstallment == true)
+                                {
+                                    <div class="installment-table-info">
+                                        <strong>@paidMonths / @totalMonths paid</strong>
+                                        <small>@monthsLeft month@(monthsLeft == 1 ? "" : "s") left</small>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Full Payment</span>
+                                }
+                            </td>
+
+
+                            <td>
+                                <div class="d-flex justify-content-end gap-2">
+                                    <button type="button"
+                                            class="btn btn-outline-primary btn-sm px-3"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editPaymentModal-@payment.PaymentID">
+                                        Edit
+                                    </button>
+
+                                    <a href="#"
+                                       class="btn btn-outline-danger btn-sm px-3 delete-btn"
+                                       data-url="@Url.Action("Delete", new { id = payment.PaymentID })">
+                                        Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+
+            </table>
+        </div>
+
+        @if (ViewBag.TotalPages > 1)
+        {
+            <div class="pagination-wrapper">
+                <div class="pagination-info">
+                    Page @ViewBag.CurrentPage of @ViewBag.TotalPages
+                </div>
+
+                <nav>
+                    <ul class="pagination custom-pagination mb-0">
+
+                        <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                            <a class="page-link"
+                               asp-action="Index"
+                               asp-route-page="@(ViewBag.CurrentPage - 1)"
+                               asp-route-search="@ViewBag.Search">
+                                Previous
+                            </a>
+                        </li>
+
+                        @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                <a class="page-link"
+                                   asp-action="Index"
+                                   asp-route-page="@i"
+                                   asp-route-search="@ViewBag.Search">
+                                    @i
+                                </a>
+                            </li>
+                        }
+
+                        <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                            <a class="page-link"
+                               asp-action="Index"
+                               asp-route-page="@(ViewBag.CurrentPage + 1)"
+                               asp-route-search="@ViewBag.Search">
+                                Next
+                            </a>
+                        </li>
+
+                    </ul>
+                </nav>
+            </div>
+        }
+
+    </div>
+
+</div>
+
+<!-- CREATE MODAL -->
+<div class="modal fade"
+     id="createPaymentModal"
+     tabindex="-1"
+     aria-labelledby="createPaymentModalLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content custom-modal">
+
+            <form asp-action="Create"
+                method="post"
+                class="confirm-form"
+                data-confirm-type="payment">
+                @Html.AntiForgeryToken()
+
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title" id="createPaymentModalLabel">Add Payment</h5>
+                        <p class="modal-subtitle">Record a new invoice payment.</p>
+                    </div>
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal">
+                    </button>
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Invoice</label>
+                        <select name="InvoiceID"
+                                class="form-select invoice-select"
+                                data-target="create"
+                                required>
+                            <option value="">Select invoice</option>
+
+                            @foreach (var invoice in availableInvoices)
+                            {
+                                var paid = paidTotals.ContainsKey(invoice.InvoiceID) ? paidTotals[invoice.InvoiceID] : 0;
+
+                                var remaining = Math.Max(0, invoice.TotalAmount - paid);
+  
+                                var nextInstallment =
+                                    installmentPaidCounts.ContainsKey(invoice.InvoiceID)
+                                        ? installmentPaidCounts[invoice.InvoiceID] + 1
+                                        : 1;
+
+                                var standardInstallment =
+                                    invoice.IsInstallment && invoice.InstallmentMonths.HasValue
+                                        ? Math.Round(
+                                            invoice.TotalAmount / invoice.InstallmentMonths.Value,
+                                            2)
+                                        : invoice.TotalAmount;
+
+                                <option value="@invoice.InvoiceID"
+                                        data-customer="@invoice.CustomerVendor?.Name"
+                                        data-total="@invoice.TotalAmount"
+                                        data-paid="@paid"
+                                        data-remaining="@remaining"
+                                        data-installment="@invoice.IsInstallment"
+                                        data-months="@invoice.InstallmentMonths"
+                                        data-next="@nextInstallment"
+                                        data-standard="@standardInstallment">
+                                    @invoice.InvoiceNumber | @invoice.CustomerVendor?.Name | ₱@invoice.TotalAmount.ToString("N2")
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="invoice-info-box mb-3">
+                        <div>
+                            <span>Customer/Vendor</span>
+                            <strong id="create-customer">Select an invoice</strong>
+                        </div>
+
+                        <div>
+                            <span>Invoice Total</span>
+                            <strong id="create-total">₱0.00</strong>
+                        </div>
+
+                        <div>
+                            <span>Already Paid</span>
+                            <strong id="create-paid">₱0.00</strong>
+                        </div>
+
+                        <div>
+                            <span>Remaining Balance</span>
+                            <strong id="create-remaining">₱0.00</strong>
+                        </div>
+
+                        <div>
+                            <span>Current Installment</span>
+                            <strong id="create-current-installment">
+                                Full Payment
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Expected Amount</span>
+                            <strong id="create-expected">
+                                ₱0.00
+                            </strong>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Amount Paid</label>
+                        <input type="number"
+                               name="AmountPaid"
+                               step="0.01"
+                               min="0"
+                               class="form-control"
+                               placeholder="Enter amount paid"
+                               required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Payment Date</label>
+                        <input type="date"
+                               name="PaymentDate"
+                               class="form-control"
+                               required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Payment Method</label>
+                        <select name="PaymentMethod" class="form-select" required>
+                            <option value="">Select method</option>
+                            <option value="Cash">Cash</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="GCash">GCash</option>
+                            <option value="Maya">Maya</option>
+                            <option value="Check">Check</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-outline-primary px-4"
+                            data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+
+                    <button type="submit"
+                            class="btn btn-primary px-4">
+                        Save Payment
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<!-- EDIT MODALS -->
+@foreach (var payment in Model)
+{
+    <div class="modal fade"
+         id="editPaymentModal-@payment.PaymentID"
+         tabindex="-1"
+         aria-labelledby="editPaymentModalLabel-@payment.PaymentID"
+         aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content custom-modal">
+
+                <form asp-action="Edit"
+                method="post"
+                class="confirm-form"
+                data-confirm-type="edit">
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden" name="PaymentID" value="@payment.PaymentID" />
+
+                    <div class="modal-header">
+                        <div>
+                            <h5 class="modal-title" id="editPaymentModalLabel-@payment.PaymentID">
+                                Edit Payment
+                            </h5>
+                            <p class="modal-subtitle">Update this payment record.</p>
+                        </div>
+
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="modal">
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Invoice</label>
+                            <select name="InvoiceID"
+                                    class="form-select invoice-select"
+                                    data-target="edit-@payment.PaymentID"
+                                    required>
+                                @foreach (var invoice in allInvoices)
+                                {
+                                    var paid = paidTotals.ContainsKey(invoice.InvoiceID) ? paidTotals[invoice.InvoiceID] : 0;
+                                    var adjustedPaid = invoice.InvoiceID == payment.InvoiceID ? paid - payment.AmountPaid : paid;
+                                    var remaining = invoice.TotalAmount - adjustedPaid;
+
+                                    <option value="@invoice.InvoiceID"
+                                            selected="@(invoice.InvoiceID == payment.InvoiceID)"
+                                            data-customer="@invoice.CustomerVendor?.Name"
+                                            data-total="@invoice.TotalAmount"
+                                            data-paid="@adjustedPaid"
+                                            data-remaining="@remaining"
+                                            data-installment="@invoice.IsInstallment"
+                                            data-months="@invoice.InstallmentMonths">
+                                        @invoice.InvoiceNumber | @invoice.CustomerVendor?.Name | ₱@invoice.TotalAmount.ToString("N2")
+                                    </option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="invoice-info-box mb-3">
+                            <div>
+                                <span>Customer/Vendor</span>
+                                <strong id="edit-@payment.PaymentID-customer">-</strong>
+                            </div>
+
+                            <div>
+                                <span>Invoice Total</span>
+                                <strong id="edit-@payment.PaymentID-total">₱0.00</strong>
+                            </div>
+
+                            <div>
+                                <span>Already Paid</span>
+                                <strong id="edit-@payment.PaymentID-paid">₱0.00</strong>
+                            </div>
+
+                            <div>
+                                <span>Remaining Balance</span>
+                                <strong id="edit-@payment.PaymentID-remaining">₱0.00</strong>
+                            </div>
+
+                            <div>
+                                <span>Current Installment</span>
+                                <strong id="edit-@payment.PaymentID-current-installment">
+                                    Full Payment
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span>Expected Amount</span>
+                                <strong id="edit-@payment.PaymentID-expected">
+                                    ₱0.00
+                                </strong>
+                            </div>
+
+                            <div class="mb-3 @(payment.Invoice?.IsInstallment == true ? "" : "d-none")"
+                                id="edit-@payment.PaymentID-installment-field">
+
+                                <label class="form-label fw-bold">
+                                    Installment Number
+                                </label>
+
+                                <input type="number"
+                                    name="InstallmentNumber"
+                                    value="@payment.InstallmentNumber"
+                                    class="form-control installment-number-input"
+                                    min="1"
+                                    placeholder="Enter installment number" />
+
+                                <small class="text-muted"
+                                    id="edit-@payment.PaymentID-installment-help">
+                                </small>
+                            </div>
+
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Amount Paid</label>
+                            <input type="number"
+                                   name="AmountPaid"
+                                   value="@payment.AmountPaid"
+                                   step="0.01"
+                                   min="0"
+                                   class="form-control"
+                                   required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Payment Date</label>
+                            <input type="date"
+                                   name="PaymentDate"
+                                   value="@payment.PaymentDate.ToString("yyyy-MM-dd")"
+                                   class="form-control"
+                                   required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Payment Method</label>
+                            <select name="PaymentMethod" class="form-select" required>
+                                <option value="Cash" selected="@(payment.PaymentMethod == "Cash")">Cash</option>
+                                <option value="Bank Transfer" selected="@(payment.PaymentMethod == "Bank Transfer")">Bank Transfer</option>
+                                <option value="GCash" selected="@(payment.PaymentMethod == "GCash")">GCash</option>
+                                <option value="Maya" selected="@(payment.PaymentMethod == "Maya")">Maya</option>
+                                <option value="Check" selected="@(payment.PaymentMethod == "Check")">Check</option>
+                            </select>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button"
+                                class="btn btn-outline-primary px-4"
+                                data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+
+                        <button type="submit"
+                                class="btn btn-primary px-4">
+                            Save Changes
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        function formatPeso(value) {
+            const number = Number(value || 0);
+
+            return "₱" + number.toLocaleString("en-PH", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function updateInvoiceInfo(selectElement) {
+            const selectedOption =
+                selectElement.options[selectElement.selectedIndex];
+
+            const target =
+                selectElement.getAttribute("data-target");
+
+            if (!selectedOption || !target) {
+                return;
+            }
+
+            const customer =
+                selectedOption.getAttribute("data-customer")
+                || "Select an invoice";
+
+            const total =
+                Number(selectedOption.getAttribute("data-total") || 0);
+
+            const paid =
+                Number(selectedOption.getAttribute("data-paid") || 0);
+
+            const remaining =
+                Number(selectedOption.getAttribute("data-remaining") || 0);
+
+            const isInstallment =
+                selectedOption.getAttribute("data-installment") === "True"
+                || selectedOption.getAttribute("data-installment") === "true";
+
+            const months =
+                Number(selectedOption.getAttribute("data-months") || 0);
+
+            const nextInstallment =
+                Number(selectedOption.getAttribute("data-next") || 1);
+
+            const standardAmount =
+                Number(selectedOption.getAttribute("data-standard") || 0);
+
+            const customerLabel =
+                document.getElementById(`${target}-customer`);
+
+            const totalLabel =
+                document.getElementById(`${target}-total`);
+
+            const paidLabel =
+                document.getElementById(`${target}-paid`);
+
+            const remainingLabel =
+                document.getElementById(`${target}-remaining`);
+
+            const installmentLabel =
+                document.getElementById(
+                    `${target}-current-installment`
+                );
+
+            const expectedAmountLabel =
+                document.getElementById(`${target}-expected`);
+
+            const installmentField =
+                document.getElementById(
+                    `${target}-installment-field`
+                );
+
+            const installmentInput =
+                installmentField?.querySelector(
+                    ".installment-number-input"
+                );
+
+            const installmentHelp =
+                document.getElementById(
+                    `${target}-installment-help`
+                );
+
+            const form = selectElement.closest("form");
+
+            const amountPaidInput =
+                form?.querySelector(
+                    'input[name="AmountPaid"]'
+                );
+
+            if (customerLabel) {
+                customerLabel.innerText = customer;
+            }
+
+            if (totalLabel) {
+                totalLabel.innerText = formatPeso(total);
+            }
+
+            if (paidLabel) {
+                paidLabel.innerText = formatPeso(paid);
+            }
+
+            if (remainingLabel) {
+                remainingLabel.innerText =
+                    formatPeso(remaining);
+            }
+
+            if (isInstallment) {
+                const expectedPayment = Math.min(
+                    standardAmount,
+                    remaining
+                );
+
+                if (installmentLabel) {
+                    installmentLabel.innerText =
+                        `${nextInstallment} / ${months}`;
+                }
+
+                if (expectedAmountLabel) {
+                    expectedAmountLabel.innerText =
+                        formatPeso(expectedPayment);
+                }
+
+                if (installmentField && installmentInput) {
+                    installmentField.classList.remove("d-none");
+
+                    installmentInput.required = true;
+                    installmentInput.min = "1";
+                    installmentInput.max = months.toString();
+                    installmentInput.value =
+                        nextInstallment.toString();
+
+                    if (installmentHelp) {
+                        installmentHelp.innerText =
+                            `Installment ${nextInstallment} of ${months}.`;
+                    }
+                }
+
+                if (amountPaidInput) {
+                    amountPaidInput.value =
+                        expectedPayment.toFixed(2);
+
+                    amountPaidInput.max =
+                        remaining.toFixed(2);
+                }
+            }
+            else {
+                if (installmentLabel) {
+                    installmentLabel.innerText =
+                        "Full Payment";
+                }
+
+                if (expectedAmountLabel) {
+                    expectedAmountLabel.innerText =
+                        formatPeso(remaining);
+                }
+
+                if (installmentField && installmentInput) {
+                    installmentField.classList.add("d-none");
+
+                    installmentInput.required = false;
+                    installmentInput.value = "";
+                    installmentInput.removeAttribute("max");
+
+                    if (installmentHelp) {
+                        installmentHelp.innerText = "";
+                    }
+                }
+
+                if (amountPaidInput) {
+                    amountPaidInput.value =
+                        remaining.toFixed(2);
+
+                    amountPaidInput.max =
+                        remaining.toFixed(2);
+                }
+            }
+        }
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+                document
+                    .querySelectorAll(".invoice-select")
+                    .forEach(function (select) {
+                        select.addEventListener(
+                            "change",
+                            function () {
+                                updateInvoiceInfo(this);
+                            }
+                        );
+
+                        updateInvoiceInfo(select);
+                    });
+            }
+        );
+    </script>
+}

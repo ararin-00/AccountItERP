@@ -1,0 +1,21 @@
+@{
+    ViewData["Title"] = "Access Denied";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dashboard.css" />
+}
+
+<div class="dashboard-card text-center" style="max-width: 620px; margin: 80px auto;">
+    <h2 class="fw-bold text-danger mb-3">Access Denied</h2>
+
+    <p class="text-muted mb-4">
+        You do not have permission to access this page.
+    </p>
+
+    <a asp-controller="Dashboard"
+       asp-action="Index"
+       class="btn btn-primary px-4">
+        Back to Dashboard
+    </a>
+</div>

@@ -1,0 +1,655 @@
+@model AccountItERP.Models.User
+
+@{
+    ViewData["Title"] = "Register";
+    Layout = "_Layout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/auth.css" />
+}
+
+<div class="auth-page">
+    <div class="auth-glass-card">
+
+        <div class="auth-image-panel">
+            <div class="auth-image-content">
+                    <div class="brand">
+                        <img src="~/images/logo.png" alt="AccountIt ERP Logo" class="brand-logo" />
+                        <span>Account It</span>
+                    </div>
+
+                <div>
+                    <h1>Create<br />New Account</h1>
+                    <p>
+                        Register your account and wait for admin approval.
+                        Access will be assigned through User Role Management.
+                    </p>
+
+                    <ul class="feature-list">
+                        <li>✓ Secure role-based access</li>
+                        <li>✓ Income and expense monitoring</li>
+                        <li>✓ Invoice and payment tracking</li>
+                        <li>✓ Profit and loss reporting</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="auth-form-panel">
+            <h2>Sign Up</h2>
+            <p class="subtitle">
+                Already registered?
+                <a asp-controller="Account" asp-action="Login" class="auth-link">Login here</a>
+            </p>
+
+            <form asp-action="Register" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <label class="form-label">FIRST NAME</label>
+                        <input asp-for="FirstName"
+                            class="form-control"
+                            placeholder="Enter first name"
+                            required />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">LAST NAME</label>
+                        <input asp-for="LastName"
+                            class="form-control"
+                            placeholder="Enter last name"
+                            required />
+                    </div>
+
+                    <div class="col-md-8">
+                        <label class="form-label">EMAIL</label>
+
+                        <input asp-for="Email"
+                            type="email"
+                            id="registerEmail"
+                            class="form-control"
+                            placeholder="Enter email address"
+                            autocomplete="email"
+                            required />
+
+                        <small id="emailAvailability"
+                            class="availability-message d-none">
+                        </small>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">CONTACT NUMBER</label>
+
+                        <input asp-for="ContactNumber"
+                            type="tel"
+                            class="form-control"
+                            placeholder="Enter contact number"
+                            autocomplete="tel"
+                            required />
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">USERNAME</label>
+
+                        <input asp-for="Username"
+                            type="text"
+                            id="registerUsername"
+                            class="form-control"
+                            placeholder="Enter username"
+                            autocomplete="username"
+                            required />
+
+                        <small id="usernameAvailability"
+                            class="availability-message d-none">
+                        </small>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">PASSWORD</label>
+
+                        <div class="password-wrapper">
+                            <input asp-for="Password"
+                                type="password"
+                                id="registerPassword"
+                                class="form-control password-input"
+                                placeholder="Enter password"
+                                autocomplete="new-password"
+                                required />
+
+                            <button type="button"
+                                    class="password-toggle"
+                                    aria-label="Show or hide password">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">CONFIRM PASSWORD</label>
+
+                        <div class="password-wrapper">
+                            <input type="password"
+                                id="confirmPassword"
+                                name="confirmPassword"
+                                class="form-control password-input"
+                                placeholder="Confirm password"
+                                autocomplete="new-password"
+                                required />
+
+                            <button type="button"
+                                    class="password-toggle"
+                                    aria-label="Show or hide password">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+
+                        <small id="passwordMatchMessage"
+                            class="password-match-message d-none">
+                        </small>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="password-strength-panel"
+                            id="passwordStrengthPanel">
+
+                            <div class="password-strength-header">
+                                <span>Password strength</span>
+                                <strong id="passwordStrengthText">
+                                    Not entered
+                                </strong>
+                            </div>
+
+                            <div class="password-strength-bars">
+                                <span class="strength-bar"></span>
+                                <span class="strength-bar"></span>
+                                <span class="strength-bar"></span>
+                                <span class="strength-bar"></span>
+                            </div>
+
+                            <div class="password-requirements mt-3">
+
+                                <div class="password-rule" data-rule="length">
+                                    <i class="bi bi-x-circle"></i>
+                                    <span>At least 8 characters</span>
+                                </div>
+
+                                <div class="password-rule" data-rule="uppercase">
+                                    <i class="bi bi-x-circle"></i>
+                                    <span>At least one uppercase letter</span>
+                                </div>
+
+                                <div class="password-rule" data-rule="lowercase">
+                                    <i class="bi bi-x-circle"></i>
+                                    <span>At least one lowercase letter</span>
+                                </div>
+
+                                <div class="password-rule" data-rule="number">
+                                    <i class="bi bi-x-circle"></i>
+                                    <span>At least one number</span>
+                                </div>
+
+                                <div class="password-rule" data-rule="special">
+                                    <i class="bi bi-x-circle"></i>
+                                    <span>At least one special character</span>
+                                </div>
+
+                                <div class="password-rule" data-rule="spaces">
+                                    <i class="bi bi-x-circle"></i>
+                                    <span>No spaces</span>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <button type="submit" class="auth-btn">
+                            Create Account
+                        </button>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const passwordInput =
+                document.getElementById("registerPassword");
+
+            const confirmPasswordInput =
+                document.getElementById("confirmPassword");
+
+            const usernameInput =
+                document.getElementById("registerUsername");
+
+            const emailInput =
+                document.getElementById("registerEmail");
+
+            const usernameMessage =
+                document.getElementById("usernameAvailability");
+
+            const emailMessage =
+                document.getElementById("emailAvailability");
+
+            const strengthPanel =
+                document.getElementById("passwordStrengthPanel");
+
+            const strengthText =
+                document.getElementById("passwordStrengthText");
+
+            const matchMessage =
+                document.getElementById("passwordMatchMessage");
+
+            const passwordRequirements =
+                strengthPanel?.querySelector(".password-requirements");
+
+            let passwordIsFocused = false;
+
+            const registerForm =
+                passwordInput?.closest("form");
+
+            let usernameCheckTimer;
+            let emailCheckTimer;
+
+            if (
+                !passwordInput ||
+                !strengthPanel ||
+                !usernameInput ||
+                !emailInput ||
+                !usernameMessage ||
+                !emailMessage
+            ) {
+                return;
+            }
+
+            const rules = {
+                length: function (value) {
+                    return value.length >= 8;
+                },
+                uppercase: function (value) {
+                    return /[A-Z]/.test(value);
+                },
+                lowercase: function (value) {
+                    return /[a-z]/.test(value);
+                },
+                number: function (value) {
+                    return /[0-9]/.test(value);
+                },
+                special: function (value) {
+                    return /[^A-Za-z0-9\s]/.test(value);
+                },
+                spaces: function (value) {
+                    return !/\s/.test(value);
+                }
+            };
+
+            function updateRule(ruleName, isValid) {
+                const ruleElement =
+                    document.querySelector(
+                        `.password-rule[data-rule="${ruleName}"]`
+                    );
+
+                if (!ruleElement) return;
+
+                const icon = ruleElement.querySelector("i");
+
+                ruleElement.classList.toggle("valid", isValid);
+
+                icon.className = isValid
+                    ? "bi bi-check-circle-fill"
+                    : "bi bi-x-circle";
+            }
+
+            function updatePasswordStrength() {
+                const value = passwordInput.value;
+
+                const results = {
+                    length: rules.length(value),
+                    uppercase: rules.uppercase(value),
+                    lowercase: rules.lowercase(value),
+                    number: rules.number(value),
+                    special: rules.special(value),
+                    spaces: rules.spaces(value)
+                };
+
+                Object.entries(results).forEach(function ([rule, valid]) {
+                    updateRule(rule, valid);
+                });
+
+                const score = Object.values(results)
+                    .filter(Boolean)
+                    .length;
+
+                strengthPanel.classList.remove(
+                    "strength-weak",
+                    "strength-fair",
+                    "strength-good",
+                    "strength-strong"
+                );
+
+                if (!value) {
+                    strengthText.innerText = "Not entered";
+                }
+                else if (score <= 2) {
+                    strengthPanel.classList.add("strength-weak");
+                    strengthText.innerText = "Weak";
+                }
+                else if (score <= 4) {
+                    strengthPanel.classList.add("strength-fair");
+                    strengthText.innerText = "Fair";
+                }
+                else if (score === 5) {
+                    strengthPanel.classList.add("strength-good");
+                    strengthText.innerText = "Good";
+                }
+                else {
+                    strengthPanel.classList.add("strength-strong");
+                    strengthText.innerText = "Strong";
+                }
+
+                validatePasswordMatch();
+                updateStrengthPanelVisibility();
+            }
+
+            function validatePasswordMatch() {
+                if (!confirmPasswordInput || !matchMessage) {
+                    return;
+                }
+
+                const confirmValue = confirmPasswordInput.value;
+
+                if (!confirmValue) {
+                    matchMessage.classList.add("d-none");
+                    matchMessage.innerText = "";
+                    return;
+                }
+
+                matchMessage.classList.remove(
+                    "d-none",
+                    "match",
+                    "no-match"
+                );
+
+                if (passwordInput.value === confirmValue) {
+                    matchMessage.classList.add("match");
+                    matchMessage.innerText = "Passwords match.";
+                }
+                else {
+                    matchMessage.classList.add("no-match");
+                    matchMessage.innerText = "Passwords do not match.";
+                }
+            }
+
+            function updateStrengthPanelVisibility() {
+                if (!strengthPanel) {
+                    return;
+                }
+
+                const password = passwordInput.value;
+
+                const allRulesValid =
+                    rules.length(password) &&
+                    rules.uppercase(password) &&
+                    rules.lowercase(password) &&
+                    rules.number(password) &&
+                    rules.special(password) &&
+                    rules.spaces(password);
+
+                strengthPanel.classList.remove(
+                    "is-hidden",
+                    "is-collapsed"
+                );
+
+                if (!password && !passwordIsFocused) {
+                    strengthPanel.classList.add("is-hidden");
+                    return;
+                }
+
+                if (allRulesValid && !passwordIsFocused) {
+                    strengthPanel.classList.add("is-collapsed");
+                }
+            }
+
+            function updateAvailabilityUI(
+                input,
+                messageElement,
+                available,
+                message
+            ) {
+                messageElement.classList.remove(
+                    "d-none",
+                    "available",
+                    "unavailable"
+                );
+
+                input.classList.remove(
+                    "field-available",
+                    "field-unavailable"
+                );
+
+                messageElement.innerText = message;
+
+                if (available) {
+                    messageElement.classList.add("available");
+                    input.classList.add("field-available");
+                    input.dataset.available = "true";
+                }
+                else {
+                    messageElement.classList.add("unavailable");
+                    input.classList.add("field-unavailable");
+                    input.dataset.available = "false";
+                }
+            }
+
+            function clearAvailabilityUI(input, messageElement) {
+                messageElement.classList.add("d-none");
+                messageElement.innerText = "";
+
+                messageElement.classList.remove(
+                    "available",
+                    "unavailable"
+                );
+
+                input.classList.remove(
+                    "field-available",
+                    "field-unavailable"
+                );
+
+                input.dataset.available = "";
+            }
+
+            async function checkUsernameAvailability() {
+                const username = usernameInput.value.trim();
+
+                if (username.length < 3) {
+                    clearAvailabilityUI(
+                        usernameInput,
+                        usernameMessage
+                    );
+
+                    if (username.length > 0) {
+                        updateAvailabilityUI(
+                            usernameInput,
+                            usernameMessage,
+                            false,
+                            "Username must contain at least 3 characters."
+                        );
+                    }
+
+                    return;
+                }
+
+                try {
+                    const response = await fetch(
+                        `/Account/CheckUsername?username=${encodeURIComponent(username)}`
+                    );
+
+                    if (!response.ok) {
+                        throw new Error("Username check failed.");
+                    }
+
+                    const result = await response.json();
+
+                    updateAvailabilityUI(
+                        usernameInput,
+                        usernameMessage,
+                        result.available,
+                        result.message
+                    );
+                }
+                catch {
+                    clearAvailabilityUI(
+                        usernameInput,
+                        usernameMessage
+                    );
+                }
+            }
+
+            async function checkEmailAvailability() {
+                const email = emailInput.value.trim();
+
+                if (!emailInput.checkValidity()) {
+                    clearAvailabilityUI(
+                        emailInput,
+                        emailMessage
+                    );
+
+                    if (email.length > 0) {
+                        updateAvailabilityUI(
+                            emailInput,
+                            emailMessage,
+                            false,
+                            "Enter a valid email address."
+                        );
+                    }
+
+                    return;
+                }
+
+                try {
+                    const response = await fetch(
+                        `/Account/CheckEmail?email=${encodeURIComponent(email)}`
+                    );
+
+                    if (!response.ok) {
+                        throw new Error("Email check failed.");
+                    }
+
+                    const result = await response.json();
+
+                    updateAvailabilityUI(
+                        emailInput,
+                        emailMessage,
+                        result.available,
+                        result.message
+                    );
+                }
+                catch {
+                    clearAvailabilityUI(
+                        emailInput,
+                        emailMessage
+                    );
+                }
+            }
+
+            passwordInput.addEventListener(
+                "input",
+                updatePasswordStrength
+            );
+
+            passwordInput.addEventListener("focus", function () {
+                passwordIsFocused = true;
+                updateStrengthPanelVisibility();
+            });
+
+            passwordInput.addEventListener("blur", function () {
+                passwordIsFocused = false;
+                updateStrengthPanelVisibility();
+            });
+
+            confirmPasswordInput?.addEventListener(
+                "input",
+                validatePasswordMatch
+            );
+
+            usernameInput.addEventListener("input", function () {
+                clearTimeout(usernameCheckTimer);
+
+                clearAvailabilityUI(
+                    usernameInput,
+                    usernameMessage
+                );
+
+                usernameCheckTimer =
+                    setTimeout(checkUsernameAvailability, 500);
+            });
+
+            emailInput.addEventListener("input", function () {
+                clearTimeout(emailCheckTimer);
+
+                clearAvailabilityUI(
+                    emailInput,
+                    emailMessage
+                );
+
+                emailCheckTimer =
+                    setTimeout(checkEmailAvailability, 500);
+            });
+
+            registerForm?.addEventListener("submit", function (event) {
+                const password = passwordInput.value;
+
+                const allRulesValid =
+                    rules.length(password) &&
+                    rules.uppercase(password) &&
+                    rules.lowercase(password) &&
+                    rules.number(password) &&
+                    rules.special(password) &&
+                    rules.spaces(password);
+
+                const passwordsMatch =
+                    confirmPasswordInput &&
+                    password === confirmPasswordInput.value;
+
+                const usernameAvailable =
+                    usernameInput.dataset.available === "true";
+
+                const emailAvailable =
+                    emailInput.dataset.available === "true";
+
+                if (
+                    !allRulesValid ||
+                    !passwordsMatch ||
+                    !usernameAvailable ||
+                    !emailAvailable
+                ) {
+                    event.preventDefault();
+
+                    updatePasswordStrength();
+                    validatePasswordMatch();
+
+                    if (!usernameAvailable) {
+                        usernameInput.focus();
+                    }
+                    else if (!emailAvailable) {
+                        emailInput.focus();
+                    }
+                    else {
+                        passwordInput.focus();
+                    }
+                }
+            });
+
+            updatePasswordStrength();
+            updateStrengthPanelVisibility();
+        });
+    </script>
+}

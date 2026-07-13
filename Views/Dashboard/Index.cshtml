@@ -1,0 +1,571 @@
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dashboard.css" />
+}
+
+<div class="dashboard-page">
+    <div class="page-title mb-4">
+
+        @{
+            var hour = DateTime.Now.Hour;
+
+            var greeting = hour < 12
+                ? "Good Morning"
+                : hour < 18
+                    ? "Good Afternoon"
+                    : "Good Evening";
+        }
+
+        <h2>
+            @greeting,
+            <span class="user-name">
+                @ViewBag.FullName 
+            </span>
+        </h2>
+
+       <p>
+        @if (ViewBag.FromDate != null || ViewBag.ToDate != null)
+        {
+            <text>
+                Showing business performance for the selected date range.
+            </text>
+        }
+        else
+        {
+            <text>
+                Here's an overview of your business performance.
+            </text>
+        }
+    </p>
+
+    </div>
+
+<div class="dashboard-card mb-4">
+
+    <form asp-action="Index" method="get">
+
+        <div class="row g-3 align-items-end">
+
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">From Date</label>
+                <input type="date"
+                       name="fromDate"
+                       value="@ViewBag.FromDate"
+                       class="form-control" />
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">To Date</label>
+                <input type="date"
+                       name="toDate"
+                       value="@ViewBag.ToDate"
+                       class="form-control" />
+            </div>
+
+            <div class="col-md-4 d-flex gap-2">
+
+                <button type="submit"
+                        class="btn btn-primary flex-fill">
+                    <i class="bi bi-funnel-fill"></i>
+                    Filter
+                </button>
+
+                <a asp-action="Index"
+                   class="btn btn-outline-secondary">
+                    Reset
+                </a>
+
+            </div>
+
+        </div>
+
+    </form>
+
+</div>
+    
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-5 g-4 mb-4">
+
+        <div class="col">
+            <div class="dashboard-card dashboard-summary-card income-card">
+                <div class="summary-header">
+                    <div class="summary-icon income-icon">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+                    <h6>Total Income</h6>
+                </div>
+
+                <div class="summary-value">
+                    ₱@ViewBag.TotalIncome.ToString("N2")
+                </div>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="dashboard-card dashboard-summary-card expense-card">
+                <div class="summary-header">
+                    <div class="summary-icon expense-icon">
+                        <i class="bi bi-wallet2"></i>
+                    </div>
+                    <h6>Total Expenses</h6>
+                </div>
+
+                <div class="summary-value">
+                    ₱@ViewBag.TotalExpenses.ToString("N2")
+                </div>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="dashboard-card dashboard-summary-card invoice-card">
+                <div class="summary-header">
+                    <div class="summary-icon invoice-icon">
+                        <i class="bi bi-receipt-cutoff"></i>
+                    </div>
+                    <h6>Invoices</h6>
+                </div>
+
+                <div class="summary-value">
+                    @ViewBag.TotalInvoices
+                </div>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="dashboard-card dashboard-summary-card payment-card">
+                <div class="summary-header">
+                    <div class="summary-icon payment-icon">
+                        <i class="bi bi-credit-card-2-front"></i>
+                    </div>
+                    <h6>Payments</h6>
+                </div>
+
+                <div class="summary-value">
+                    ₱@ViewBag.TotalPayments.ToString("N2")
+                </div>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="dashboard-card dashboard-summary-card profit-card">
+                <div class="summary-header">
+                    <div class="summary-icon profit-icon">
+                        <i class="bi bi-graph-up-arrow"></i>
+                    </div>
+                    <h6>Net Profit</h6>
+                </div>
+
+                <div class="summary-value">
+                    ₱@ViewBag.NetProfit.ToString("N2")
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row g-4 mb-4">
+
+        <div class="col-lg-6">
+            <div class="dashboard-card chart-card compact-chart-card">
+                <h5>Financial Overview</h5>
+                <p class="text-muted mb-3">Income, expenses, payments, and net profit.</p>
+                <canvas id="financeChart"></canvas>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="dashboard-card chart-card compact-chart-card">
+                <h5>Invoice Status</h5>
+                <p class="text-muted mb-3">Paid, pending, and cancelled invoices.</p>
+                <canvas id="invoiceStatusChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-lg-6">
+            <div class="dashboard-card quick-actions-card compact-actions-card">
+
+                <h5>Quick Actions</h5>
+                <p class="text-muted mb-4">
+                    Common financial shortcuts.
+                </p>
+
+                <div class="quick-actions-grid">
+
+                    <a asp-controller="Income"
+                    asp-action="Index"
+                    class="quick-action-card">
+
+                        <div class="action-icon income-action">
+                            <i class="bi bi-cash-stack"></i>
+                        </div>
+
+                        <div>
+                            <h6>Add Income</h6>
+                            <small>Create a new income record</small>
+                        </div>
+
+                    </a>
+
+                    <a asp-controller="Expense"
+                    asp-action="Index"
+                    class="quick-action-card">
+
+                        <div class="action-icon expense-action">
+                            <i class="bi bi-wallet2"></i>
+                        </div>
+
+                        <div>
+                            <h6>Add Expense</h6>
+                            <small>Create a new expense</small>
+                        </div>
+
+                    </a>
+
+                    <a asp-controller="Invoice"
+                    asp-action="Index"
+                    class="quick-action-card">
+
+                        <div class="action-icon invoice-action">
+                            <i class="bi bi-receipt-cutoff"></i>
+                        </div>
+
+                        <div>
+                            <h6>Create Invoice</h6>
+                            <small>Generate a customer invoice</small>
+                        </div>
+
+                    </a>
+
+                    <a asp-controller="Payment"
+                    asp-action="Index"
+                    class="quick-action-card">
+
+                        <div class="action-icon payment-action">
+                            <i class="bi bi-credit-card-2-front"></i>
+                        </div>
+
+                        <div>
+                            <h6>Record Payment</h6>
+                            <small>Add a payment transaction</small>
+                        </div>
+
+                    </a>
+
+                </div>
+
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="dashboard-card chart-card compact-chart-card">
+                <h5>Payment Methods</h5>
+                <p class="text-muted mb-3">Payments grouped by method.</p>
+                <canvas id="paymentMethodChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+
+    <div class="row g-4 mt-1">
+    <div class="col-12">
+            <div class="dashboard-card recent-transactions-card">
+                <div class="recent-header">
+                    <div>
+                        <h5>Recent Transactions</h5>
+                        <p class="text-muted mb-0">Latest income, expense, and payment activities.</p>
+                    </div>
+                </div>
+
+                <div class="table-responsive mt-4">
+                    <table class="table align-middle recent-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Details</th>
+                                <th class="text-end">Amount</th>
+                                <th class="text-end">Date</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var transaction in ViewBag.RecentTransactions)
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="transaction-badge @transaction.BadgeClass">
+                                            <i class="@transaction.IconClass"></i>
+                                            @transaction.Type
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <div class="transaction-title">@transaction.Title</div>
+                                        <small class="text-muted">@transaction.Description</small>
+                                    </td>
+
+                                    <td class="text-end transaction-amount">
+                                        ₱@transaction.Amount.ToString("N2")
+                                    </td>
+
+                                    <td class="text-end text-muted">
+                                        @transaction.Date.ToString("MMM dd, yyyy")
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        const totalIncome = Number('@ViewBag.TotalIncome');
+        const totalExpenses = Number('@ViewBag.TotalExpenses');
+        const totalPayments = Number('@ViewBag.TotalPayments');
+        const netProfit = Number('@ViewBag.NetProfit');
+
+        const paidInvoices = Number('@ViewBag.PaidInvoices');
+        const pendingInvoices = Number('@ViewBag.PendingInvoices');
+        const cancelledInvoices = Number('@ViewBag.CancelledInvoices');
+
+        const cashPayments = Number('@ViewBag.CashPayments');
+        const bankPayments = Number('@ViewBag.BankPayments');
+        const gcashPayments = Number('@ViewBag.GCashPayments');
+        const otherPayments = Number('@ViewBag.OtherPayments');
+
+
+        const centerTextPlugin = {
+    id: 'centerText',
+
+    afterDraw(chart) {
+
+        if (chart.config.type !== 'doughnut')
+            return;
+
+        const {
+            ctx
+        } = chart;
+
+        const meta = chart.getDatasetMeta(0);
+
+        if (!meta.data.length)
+            return;
+
+        const x = meta.data[0].x;
+        const y = meta.data[0].y;
+
+        ctx.save();
+
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        ctx.fillStyle = "#1e293b";
+        ctx.font = "700 28px Inter";
+
+        ctx.fillText(chart.options.plugins.centerText.text, x, y - 10);
+
+        ctx.fillStyle = "#64748b";
+        ctx.font = "500 13px Inter";
+
+        ctx.fillText(chart.options.plugins.centerText.subtext, x, y + 18);
+
+        ctx.restore();
+    }
+};
+
+Chart.register(centerTextPlugin);
+
+
+
+        new Chart(document.getElementById('financeChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Income', 'Expenses', 'Payments', 'Net Profit'],
+                datasets: [{
+                    data: [
+                        totalIncome,
+                        totalExpenses,
+                        totalPayments,
+                        netProfit
+                    ],
+
+                    backgroundColor: [
+                        '#22c55e',
+                        '#ef4444',
+                        '#0ea5e9',
+                        '#8b5cf6'
+                    ],
+
+                    borderRadius: 14,
+                    borderSkipped: false,
+                    maxBarThickness: 55
+                }]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+
+                    tooltip: {
+                        backgroundColor: "#ffffff",
+                        titleColor: "#111827",
+                        bodyColor: "#111827",
+                        borderColor: "#e5e7eb",
+                        borderWidth: 1,
+                        padding: 12
+                    }
+                },
+
+                scales: {
+
+                    x: {
+                        grid: {
+                            display: false
+                        },
+
+                        ticks: {
+                            color: "#64748b",
+                            font: {
+                                weight: "600"
+                            }
+                        }
+                    },
+
+                    y: {
+
+                        beginAtZero: true,
+
+                        grid: {
+                            color: "rgba(148,163,184,.15)",
+                            drawBorder: false
+                        },
+
+                        ticks: {
+                            color: "#64748b"
+                        }
+                    }
+
+                }
+
+            }
+
+        });
+
+        new Chart(document.getElementById('invoiceStatusChart'), {
+        type: 'doughnut',
+
+        data: {
+            labels: ['Paid', 'Pending', 'Cancelled'],
+
+            datasets: [{
+                data: [
+                    paidInvoices,
+                    pendingInvoices,
+                    cancelledInvoices
+                ],
+
+                backgroundColor: [
+                    '#22c55e',
+                    '#f59e0b',
+                    '#ef4444'
+                ],
+
+                borderWidth: 0
+            }]
+        },
+
+        options: {
+
+            responsive: true,
+            maintainAspectRatio: false,
+
+            cutout: '74%',
+
+            plugins: {
+
+                legend: {
+                    position: 'bottom'
+                },
+
+                centerText: {
+                    text: '@ViewBag.TotalInvoices',
+                    subtext: 'Invoices'
+                }
+
+            }
+
+        }
+
+    });
+
+        new Chart(document.getElementById('paymentMethodChart'), {
+            type: 'doughnut',
+
+            data: {
+                labels: [
+                    'Cash',
+                    'Bank Transfer',
+                    'GCash',
+                    'Others'
+                ],
+
+                datasets: [{
+                    data: [
+                        cashPayments,
+                        bankPayments,
+                        gcashPayments,
+                        otherPayments
+                    ],
+
+                    backgroundColor: [
+                        '#3b82f6',
+                        '#06b6d4',
+                        '#22c55e',
+                        '#94a3b8'
+                    ],
+
+                    borderWidth: 0
+                }]
+            },
+
+            options: {
+
+                responsive: true,
+                maintainAspectRatio: false,
+
+                cutout: '74%',
+
+                plugins: {
+
+                    legend: {
+                        position: 'bottom'
+                    },
+
+                    centerText: {
+                        text: '₱@ViewBag.TotalPayments.ToString("N0")',
+                        subtext: 'Payments'
+                    }
+
+                }
+
+            }
+
+        });
+    </script>
+}

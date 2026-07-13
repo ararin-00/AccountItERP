@@ -1,0 +1,345 @@
+@model List<AccountItERP.Models.Expense>
+
+@{
+    ViewData["Title"] = "Expense Management";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dashboard.css" />
+}
+
+<div class="user-management-page">
+
+    <div class="page-title d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>Expense Management</h2>
+            <p>Track and manage all expense records.</p>
+        </div>
+
+        <button type="button"
+                class="btn btn-primary px-4"
+                data-bs-toggle="modal"
+                data-bs-target="#createExpenseModal">
+            + Add Expense
+        </button>
+    </div>
+
+    <div class="dashboard-card">
+
+    <form asp-action="Index"
+          method="get"
+          class="row g-3 mb-4 align-items-center">
+
+        <div class="col-md-9">
+            <input type="text"
+                   name="search"
+                   value="@ViewBag.Search"
+                   class="form-control"
+                   placeholder="Search expense category..." />
+        </div>
+
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit"
+                    class="btn btn-primary flex-fill">
+                Search
+            </button>
+
+            @if (!string.IsNullOrWhiteSpace(ViewBag.Search))
+            {
+                <a asp-action="Index"
+                   class="btn btn-outline-secondary">
+                    Clear
+                </a>
+            }
+        </div>
+
+    </form>
+
+        <div class="table-responsive">
+            <table class="table align-middle user-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>Expense Date</th>
+                        <th>Description</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var expense in Model)
+                    {
+                        <tr>
+                            <td><strong>@expense.ExpenseCategory</strong></td>
+
+                            <td>
+                                <span class="amount-expense">
+                                    ₱@expense.Amount.ToString("N2")
+                                </span>
+                            </td>
+
+                            <td>@expense.ExpenseDate.ToString("MMM dd, yyyy")</td>
+
+                            <td>@expense.Description</td>
+
+                            <td>
+                                <div class="d-flex justify-content-end gap-2">
+                                    <button type="button"
+                                            class="btn btn-outline-primary btn-sm px-3"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editExpenseModal-@expense.ExpenseID">
+                                        Edit
+                                    </button>
+
+                                    <a href="#"
+                                    class="btn btn-outline-danger btn-sm px-3 delete-btn"
+                                    data-url="@Url.Action("Delete", new { id = expense.ExpenseID })">
+                                        Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (ViewBag.TotalPages > 1)
+        {
+            <div class="pagination-wrapper">
+                <div class="pagination-info">
+                    Page @ViewBag.CurrentPage of @ViewBag.TotalPages
+                </div>
+
+                <nav>
+                    <ul class="pagination custom-pagination mb-0">
+
+                        <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                            <a class="page-link"
+                               asp-action="Index"
+                               asp-route-page="@(ViewBag.CurrentPage - 1)"
+                               asp-route-search="@ViewBag.Search">
+                                Previous
+                            </a>
+                        </li>
+
+                        @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                <a class="page-link"
+                                   asp-action="Index"
+                                   asp-route-page="@i"
+                                   asp-route-search="@ViewBag.Search">
+                                    @i
+                                </a>
+                            </li>
+                        }
+
+                        <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                            <a class="page-link"
+                               asp-action="Index"
+                               asp-route-page="@(ViewBag.CurrentPage + 1)"
+                               asp-route-search="@ViewBag.Search">
+                                Next
+                            </a>
+                        </li>
+
+                    </ul>
+                </nav>
+            </div>
+        }
+
+    </div>
+
+</div>
+
+<!-- CREATE MODAL -->
+<div class="modal fade"
+     id="createExpenseModal"
+     tabindex="-1"
+     aria-labelledby="createExpenseModalLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content custom-modal">
+
+            <form asp-action="Create"
+            method="post"
+            class="confirm-form"
+            data-confirm-type="create">
+                @Html.AntiForgeryToken()
+
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title" id="createExpenseModalLabel">
+                            Add Expense
+                        </h5>
+                        <p class="modal-subtitle">
+                            Create a new expense record.
+                        </p>
+                    </div>
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close">
+                    </button>
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Expense Category</label>
+                        <input type="text"
+                               name="ExpenseCategory"
+                               class="form-control"
+                               placeholder="Enter expense category"
+                               required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Amount</label>
+                        <input type="number"
+                               name="Amount"
+                               step="0.01"
+                               min="0"
+                               class="form-control"
+                               placeholder="Enter amount"
+                               required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Expense Date</label>
+                        <input type="date"
+                               name="ExpenseDate"
+                               class="form-control"
+                               required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Description</label>
+                        <textarea name="Description"
+                                  class="form-control"
+                                  rows="3"
+                                  placeholder="Enter description"></textarea>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-outline-primary px-4"
+                            data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+
+                    <button type="submit"
+                            class="btn btn-primary px-4">
+                        Save Expense
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<!-- EDIT MODALS - OUTSIDE TABLE -->
+@foreach (var expense in Model)
+{
+    <div class="modal fade"
+         id="editExpenseModal-@expense.ExpenseID"
+         tabindex="-1"
+         aria-labelledby="editExpenseModalLabel-@expense.ExpenseID"
+         aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content custom-modal">
+
+                <form asp-action="Edit"
+                method="post"
+                class="confirm-form"
+                data-confirm-type="edit">
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden" name="ExpenseID" value="@expense.ExpenseID" />
+                    <input type="hidden" name="UserID" value="@expense.UserID" />
+
+                    <div class="modal-header">
+                        <div>
+                            <h5 class="modal-title" id="editExpenseModalLabel-@expense.ExpenseID">
+                                Edit Expense
+                            </h5>
+                            <p class="modal-subtitle">
+                                Update this expense record.
+                            </p>
+                        </div>
+
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close">
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Expense Category</label>
+                            <input type="text"
+                                   name="ExpenseCategory"
+                                   value="@expense.ExpenseCategory"
+                                   class="form-control"
+                                   required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Amount</label>
+                            <input type="number"
+                                   name="Amount"
+                                   value="@expense.Amount"
+                                   step="0.01"
+                                   min="0"
+                                   class="form-control"
+                                   required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Expense Date</label>
+                            <input type="date"
+                                   name="ExpenseDate"
+                                   value="@expense.ExpenseDate.ToString("yyyy-MM-dd")"
+                                   class="form-control"
+                                   required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Description</label>
+                            <textarea name="Description"
+                                      class="form-control"
+                                      rows="3">@expense.Description</textarea>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button"
+                                class="btn btn-outline-primary px-4"
+                                data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+
+                        <button type="submit"
+                                class="btn btn-primary px-4">
+                            Save Changes
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+}

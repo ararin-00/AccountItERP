@@ -1,0 +1,18 @@
+# Build folders
+bin/
+obj/
+.vs/
+
+# SQLite files
+*.db
+*.db-shm
+*.db-wal
+*.sqbpro
+
+# Backup files
+AccountItERP_SQLite_Backup.sql
+accountit_old.db
+Migrations_SQLite_Backup/
+
+# Local settings
+appsettings.Development.json

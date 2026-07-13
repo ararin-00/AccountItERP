@@ -1,0 +1,84 @@
+@{
+    ViewData["Title"] = "Login";
+    Layout = "_Layout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/auth.css" />
+}
+
+<div class="auth-page">
+    <div class="auth-glass-card login-card">
+
+        <div class="auth-image-panel login-image">
+            <div class="auth-image-content">
+                
+                <div class="brand">
+                <img src="~/images/logo.png" alt="Account It Logo" class="brand-logo" />
+                <span>Account It</span>
+                </div>
+                <div>
+                    <h1>Welcome<br />Back</h1>
+                    <p>
+                        Sign in to manage income, expenses, invoices, payments,
+                        and financial reports in one secure system.
+                    </p>
+
+                    <ul class="feature-list">
+                        <li>✓ Secure account access</li>
+                        <li>✓ Role-based dashboard</li>
+                        <li>✓ Payment and invoice tracking</li>
+                        <li>✓ Profit and loss monitoring</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="auth-form-panel">
+            <h2>Login</h2>
+            <p class="subtitle">
+                New to Account It?
+                <a asp-controller="Account" asp-action="Register" class="auth-link">Create account</a>
+            </p>
+
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger rounded-4">
+                    @ViewBag.Error
+                </div>
+            }
+
+            <form method="post">
+                <div class="mb-3">
+                    <label class="form-label">USERNAME</label>
+                    <input type="text"
+                           name="username"
+                           class="form-control"
+                           placeholder="Enter username"
+                           required />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+
+                    <div class="password-wrapper">
+                        <input type="password"
+                            name="password"
+                            class="form-control password-input"
+                            placeholder="Enter password"
+                            required />
+
+                        <button type="button" class="password-toggle">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="auth-btn">
+                    Login
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>

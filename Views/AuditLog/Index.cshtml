@@ -1,0 +1,108 @@
+@model List<AccountItERP.Models.AuditLog>
+
+@{
+    ViewData["Title"] = "Audit Logs";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dashboard.css" />
+}
+
+<div class="user-management-page">
+
+    <div class="page-title mb-4">
+        <h2>Audit Logs</h2>
+        <p>View recorded user activities and system actions.</p>
+    </div>
+
+    <div class="dashboard-card">
+
+        <div class="table-responsive">
+            <table class="table align-middle user-table">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>User</th>
+                        <th>Module</th>
+                        <th>Action</th>
+                        <th>Record ID</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var log in Model)
+                    {
+                        <tr>
+                            <td>@log.CreatedAt.ToString("MMM dd, yyyy hh:mm tt")</td>
+
+                            <td>
+                                <strong>
+                                    @(log.User != null ? log.User.FirstName + " " + log.User.LastName : "Unknown User")
+                                </strong>
+                            </td>
+
+                            <td>@log.Module</td>
+
+                            <td>
+                                <span class="payment-method-pill">
+                                    @log.Action
+                                </span>
+                            </td>
+
+                            <td>
+                                @(log.RecordID.HasValue ? log.RecordID.Value.ToString() : "-")
+                            </td>
+
+                            <td>@log.Description</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (ViewBag.TotalPages > 1)
+        {
+            <div class="pagination-wrapper">
+                <div class="pagination-info">
+                    Page @ViewBag.CurrentPage of @ViewBag.TotalPages
+                </div>
+
+                <nav>
+                    <ul class="pagination custom-pagination mb-0">
+
+                        <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                            <a class="page-link"
+                               asp-action="Index"
+                               asp-route-page="@(ViewBag.CurrentPage - 1)">
+                                Previous
+                            </a>
+                        </li>
+
+                        @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                <a class="page-link"
+                                   asp-action="Index"
+                                   asp-route-page="@i">
+                                    @i
+                                </a>
+                            </li>
+                        }
+
+                        <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                            <a class="page-link"
+                               asp-action="Index"
+                               asp-route-page="@(ViewBag.CurrentPage + 1)">
+                                Next
+                            </a>
+                        </li>
+
+                    </ul>
+                </nav>
+            </div>
+        }
+
+    </div>
+
+</div>

@@ -1,0 +1,439 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Account It</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/css/layout.css" />
+    <link rel="stylesheet" href="~/css/dashboard.css" />
+
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+
+<body>
+
+@{
+    var controller = ViewContext.RouteData.Values["Controller"]?.ToString();
+    var fullName = Context.Session.GetString("FullName") ?? "User";
+    var role = Context.Session.GetString("Role") ?? "No Role";
+}
+
+@if (controller == "Account")
+{
+    @RenderBody()
+}
+else
+{
+    <div class="app-shell">
+
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-left">
+                    <img src="~/images/logo.png" alt="Account It Logo" class="sidebar-logo" />
+                    <span class="brand-text">Account It</span>
+                </div>
+
+                <button type="button" class="sidebar-toggle" id="sidebarToggle">
+                    <i class="bi bi-list"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-menu">
+
+                <a asp-controller="Dashboard" asp-action="Index">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Dashboard</span>
+                </a>
+
+                @if (role == "Administrator" || role == "Accountant")
+                {
+                    <a asp-controller="Income" asp-action="Index">
+                        <i class="bi bi-cash-stack"></i>
+                        <span>Income Management</span>
+                    </a>
+
+                    <a asp-controller="Expense" asp-action="Index">
+                        <i class="bi bi-wallet2"></i>
+                        <span>Expense Management</span>
+                    </a>
+
+                    <a asp-controller="Invoice" asp-action="Index">
+                        <i class="bi bi-receipt-cutoff"></i>
+                        <span>Invoice Management</span>
+                    </a>
+
+                    <a asp-controller="CustomerVendor" asp-action="Index">
+                        <i class="bi bi-people"></i>
+                        <span>Customer/Vendor</span>
+                    </a>
+                }
+
+                @if (role == "Administrator" || role == "Accountant" || role == "Staff")
+                {
+                    <a asp-controller="Payment" asp-action="Index">
+                        <i class="bi bi-credit-card-2-front"></i>
+                        <span>Payment Tracking</span>
+                    </a>
+                }
+
+                @if (role == "Administrator" || role == "Accountant" || role == "Staff" || role == "Manager")
+                {
+                    <a asp-controller="Reports" asp-action="Index">
+                        <i class="bi bi-graph-up-arrow"></i>
+                        <span>Profit & Loss Report</span>
+                    </a>
+                }
+
+                @if (role == "Administrator")
+                {
+                    <a asp-controller="UserManagement" asp-action="Index">
+                        <i class="bi bi-person-gear"></i>
+                        <span>User Management</span>
+                    </a>
+                }
+
+                @if (role == "Administrator" || role == "Viewer" || role == "Auditor")
+                {
+                    <a asp-controller="AuditLog" asp-action="Index">
+                        <i class="bi bi-clock-history"></i>
+                        <span>Audit Logs</span>
+                    </a>
+                }
+
+            </nav>
+            
+        </aside>
+
+        <main class="main-content">
+
+            <div class="topbar">
+                <div class="dropdown account-dropdown">
+                    <button class="account-btn dropdown-toggle"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                        <div class="account-avatar">
+                            @fullName.Substring(0, 1).ToUpper()
+                        </div>
+
+                        <div class="account-text">
+                            <strong>@fullName</strong>
+                            <small>@role</small>
+                        </div>
+                    </button>
+
+                    <ul class="dropdown-menu dropdown-menu-end account-menu">
+                        <li class="dropdown-header">
+                            <strong>@fullName</strong>
+                            <span>@role</span>
+                        </li>
+
+                        <li><hr class="dropdown-divider" /></li>
+
+                        <li>
+                            <a class="dropdown-item text-danger"
+                               asp-controller="Account"
+                               asp-action="Logout">
+                                <i class="bi bi-box-arrow-right me-2"></i>
+                                Logout
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            @RenderBody()
+        </main>
+
+    </div>
+}
+
+<!-- Toast Notifications -->
+<div class="toast-container position-fixed top-0 end-0 p-4 custom-toast-container">
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="toast custom-toast success-toast show" role="alert">
+            <div class="toast-icon">✓</div>
+
+            <div class="toast-content">
+                <strong>Success</strong>
+                <span>@TempData["Success"]</span>
+            </div>
+
+            <button type="button"
+                    class="btn-close toast-close"
+                    data-bs-dismiss="toast">
+            </button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="toast custom-toast error-toast show" role="alert">
+            <div class="toast-icon">!</div>
+
+            <div class="toast-content">
+                <strong>Error</strong>
+                <span>@TempData["Error"]</span>
+            </div>
+
+            <button type="button"
+                    class="btn-close toast-close"
+                    data-bs-dismiss="toast">
+            </button>
+        </div>
+    }
+
+</div>
+
+<!-- Global Confirmation Modal -->
+<div class="confirmation-overlay" id="confirmOverlay">
+    <div class="confirmation-card">
+
+        <div class="confirmation-icon confirmation-icon-create"
+             id="confirmIconBox">
+            <i class="bi bi-question-lg" id="confirmIcon"></i>
+        </div>
+
+        <h5 class="confirmation-title" id="confirmTitle">
+            Confirm Action
+        </h5>
+
+        <p class="confirmation-message" id="confirmMessage">
+            Are you sure you want to continue?
+        </p>
+
+        <p class="confirmation-warning d-none" id="confirmWarning"></p>
+
+        <div class="confirmation-actions">
+            <button type="button"
+                    class="confirmation-cancel-btn"
+                    id="confirmCancelButton">
+                Cancel
+            </button>
+
+            <button type="button"
+                    class="confirmation-action-btn"
+                    id="confirmButton">
+                Confirm
+            </button>
+        </div>
+
+    </div>
+</div>
+
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+
+<script>
+    const sidebar = document.getElementById("sidebar");
+    const sidebarToggle = document.getElementById("sidebarToggle");
+
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener("click", function () {
+            sidebar.classList.toggle("collapsed");
+            document.body.classList.toggle("sidebar-collapsed");
+        });
+    }
+</script>
+
+<script>
+    let pendingConfirmForm = null;
+    let confirmActionUrl = "";
+
+    const confirmOverlay = document.getElementById("confirmOverlay");
+    const confirmTitle = document.getElementById("confirmTitle");
+    const confirmMessage = document.getElementById("confirmMessage");
+    const confirmWarning = document.getElementById("confirmWarning");
+    const confirmButton = document.getElementById("confirmButton");
+    const confirmCancelButton = document.getElementById("confirmCancelButton");
+    const confirmIcon = document.getElementById("confirmIcon");
+    const confirmIconBox = document.getElementById("confirmIconBox");
+
+    function setConfirmationStyle(type) {
+        confirmIconBox.className = "confirmation-icon";
+        confirmButton.className = "confirmation-action-btn";
+
+        if (type === "delete") {
+            confirmIcon.className = "bi bi-trash3";
+            confirmIconBox.classList.add("confirmation-icon-delete");
+            confirmButton.classList.add("confirmation-btn-delete");
+        }
+        else if (type === "edit") {
+            confirmIcon.className = "bi bi-pencil-square";
+            confirmIconBox.classList.add("confirmation-icon-edit");
+            confirmButton.classList.add("confirmation-btn-edit");
+        }
+        else if (type === "payment") {
+            confirmIcon.className = "bi bi-credit-card-2-front";
+            confirmIconBox.classList.add("confirmation-icon-payment");
+            confirmButton.classList.add("confirmation-btn-payment");
+        }
+        else {
+            confirmIcon.className = "bi bi-plus-lg";
+            confirmIconBox.classList.add("confirmation-icon-create");
+            confirmButton.classList.add("confirmation-btn-create");
+        }
+    }
+
+    function showConfirmation(type, title, message, warning, buttonText) {
+        setConfirmationStyle(type);
+
+        confirmTitle.innerText = title;
+        confirmMessage.innerText = message;
+        confirmButton.innerText = buttonText;
+
+        if (warning) {
+            confirmWarning.innerText = warning;
+            confirmWarning.classList.remove("d-none");
+        } else {
+            confirmWarning.innerText = "";
+            confirmWarning.classList.add("d-none");
+        }
+
+        confirmOverlay.classList.add("show");
+    }
+
+    function closeConfirmation() {
+        confirmOverlay.classList.remove("show");
+        pendingConfirmForm = null;
+        confirmActionUrl = "";
+    }
+
+    document.addEventListener("submit", function (event) {
+        const form = event.target.closest(".confirm-form");
+
+        if (!form || form.dataset.confirmed === "true") {
+            return;
+        }
+
+        if (!form.checkValidity()) {
+            return;
+        }
+
+        event.preventDefault();
+
+        pendingConfirmForm = form;
+        confirmActionUrl = "";
+
+        const type = form.dataset.confirmType || "create";
+
+        if (type === "edit") {
+            showConfirmation(
+                "edit",
+                "Save Changes",
+                "Are you sure you want to save these changes?",
+                "",
+                "Save Changes"
+            );
+        }
+        else if (type === "payment") {
+            showConfirmation(
+                "payment",
+                "Record Payment",
+                "Are you sure you want to record this payment?",
+                "",
+                "Record Payment"
+            );
+        }
+        else {
+            showConfirmation(
+                "create",
+                "Add New Record",
+                "Are you sure you want to add this record?",
+                "",
+                "Save"
+            );
+        }
+    });
+
+    document.addEventListener("click", function (event) {
+        const deleteButton = event.target.closest(".delete-btn");
+
+        if (!deleteButton) {
+            return;
+        }
+
+        event.preventDefault();
+
+        pendingConfirmForm = null;
+        confirmActionUrl = deleteButton.dataset.url;
+
+        showConfirmation(
+            "delete",
+            "Delete Record",
+            "Are you sure you want to delete this record?",
+            "This action cannot be undone.",
+            "Delete"
+        );
+    });
+
+    confirmButton.addEventListener("click", function () {
+        if (confirmActionUrl) {
+            window.location.href = confirmActionUrl;
+            return;
+        }
+
+        if (pendingConfirmForm) {
+            const form = pendingConfirmForm;
+
+            form.dataset.confirmed = "true";
+            confirmOverlay.classList.remove("show");
+            form.requestSubmit();
+        }
+    });
+
+    confirmCancelButton.addEventListener("click", closeConfirmation);
+
+    confirmOverlay.addEventListener("click", function (event) {
+        if (event.target === confirmOverlay) {
+            closeConfirmation();
+        }
+    });
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const toastElList = document.querySelectorAll(".toast");
+
+        toastElList.forEach(function (toastEl) {
+            const toast = new bootstrap.Toast(toastEl, {
+                delay: 3000
+            });
+
+            toast.show();
+        });
+    });
+</script>
+
+@await RenderSectionAsync("Scripts", required: false)
+
+<script>
+    document.addEventListener("click", function (e) {
+        const btn = e.target.closest(".password-toggle");
+        if (!btn) return;
+
+        const wrapper = btn.closest(".password-wrapper");
+        const input = wrapper.querySelector(".password-input");
+        const icon = btn.querySelector("i");
+
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.remove("bi-eye");
+            icon.classList.add("bi-eye-slash");
+        } else {
+            input.type = "password";
+            icon.classList.remove("bi-eye-slash");
+            icon.classList.add("bi-eye");
+        }
+    });
+</script>
+
+</body>
+</html>

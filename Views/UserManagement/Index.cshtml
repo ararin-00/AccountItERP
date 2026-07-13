@@ -1,0 +1,170 @@
+@model List<AccountItERP.Models.User>
+
+@{
+ViewData["Title"] = "User Management";
+}
+
+@section Styles { <link rel="stylesheet" href="~/css/dashboard.css" />
+}
+
+<div class="user-management-page">
+
+    <div class="page-title mb-4">
+        <h2>User Management</h2>
+        <p>
+            Manage user accounts, approval status, and system roles.
+        </p>
+    </div>
+
+    <div class="dashboard-card">
+
+<div class="dashboard-card">
+
+<form asp-action="Index" method="get" class="mb-4">
+    <div class="input-group">
+        <input type="text"
+               name="search"
+               value="@ViewBag.Search"
+               class="form-control"
+               placeholder="Search by name, username, or email..." />
+
+        <button type="submit" class="btn btn-primary px-4">
+            Search
+        </button>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table align-middle user-table">
+
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Role</th>
+                <th class="text-end">Manage Account</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var user in Model)
+            {
+                <tr>
+
+                    <td>
+                        <div class="fw-bold text-dark">
+                            @user.FirstName @user.LastName
+                        </div>
+                    </td>
+
+                    <td class="text-muted">
+                        @user.Username
+                    </td>
+
+                    <td>
+                        @user.Email
+                    </td>
+
+                    <td>
+                        @if (user.Status == "Active")
+                        {
+                            <span class="badge rounded-pill bg-success px-3 py-2">
+                                Active
+                            </span>
+                        }
+                        else if (user.Status == "Pending")
+                        {
+                            <span class="badge rounded-pill bg-warning text-dark px-3 py-2">
+                                Pending
+                            </span>
+                        }
+                        else if (user.Status == "Rejected")
+                        {
+                            <span class="badge rounded-pill bg-danger px-3 py-2">
+                                Rejected
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge rounded-pill bg-secondary px-3 py-2">
+                                @user.Status
+                            </span>
+                        }
+                    </td>
+
+                    <td>
+                        <span class="badge rounded-pill bg-primary px-3 py-2">
+                            @user.Role
+                        </span>
+                    </td>
+
+                    <td>
+                        <form asp-action="UpdateRole"
+                              method="post"
+                              class="d-flex justify-content-end gap-2">
+
+                            <input type="hidden"
+                                   name="id"
+                                   value="@user.UserID" />
+
+                            <select name="status"
+                                    class="form-select form-select-sm"
+                                    style="min-width:130px;">
+                                <option value="Pending" selected="@(user.Status == "Pending")">Pending</option>
+                                <option value="Active" selected="@(user.Status == "Active")">Active</option>
+                                <option value="Rejected" selected="@(user.Status == "Rejected")">Rejected</option>
+                                <option value="Disabled" selected="@(user.Status == "Disabled")">Disabled</option>
+                            </select>
+
+                            <select name="role"
+                                    class="form-select form-select-sm"
+                                    style="min-width:140px;">
+                                <option value="Administrator" selected="@(user.Role == "Administrator")">Administrator</option>
+                                <option value="Manager" selected="@(user.Role == "Manager")">Manager</option>
+                                <option value="Accountant" selected="@(user.Role == "Accountant")">Accountant</option>
+                                <option value="Auditor" selected="@(user.Role == "Auditor")">Auditor</option>
+                                <option value="Staff" selected="@(user.Role == "Staff")">Staff</option>
+                            </select>
+
+                            <button type="submit"
+                                    class="btn btn-primary btn-sm px-3">
+                                Save
+                            </button>
+
+                        </form>
+                    </td>
+
+                </tr>
+            }
+        </tbody>
+
+    </table>
+</div>
+
+@if (ViewBag.TotalPages > 1)
+{
+    <nav class="mt-4">
+        <ul class="pagination justify-content-end mb-0">
+
+            @for (int i = 1; i <= ViewBag.TotalPages; i++)
+            {
+                <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-page="@i"
+                       asp-route-search="@ViewBag.Search">
+                        @i
+                    </a>
+
+                </li>
+            }
+
+        </ul>
+    </nav>
+}
+
+</div>
+</div>

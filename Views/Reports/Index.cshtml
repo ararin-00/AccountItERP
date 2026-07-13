@@ -1,0 +1,98 @@
+@{
+    ViewData["Title"] = "Profit & Loss Report";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dashboard.css" />
+}
+
+<div class="user-management-page">
+
+    <div class="page-title d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>Profit & Loss Report</h2>
+            <p>View income, expenses, and net profit summary.</p>
+        </div>
+
+        <a asp-action="ExportPdf"
+           asp-route-fromDate="@ViewBag.FromDate"
+           asp-route-toDate="@ViewBag.ToDate"
+           class="btn btn-primary px-4">
+            Export PDF
+        </a>
+    </div>
+
+    <div class="dashboard-card mb-4">
+        <form asp-action="Index" method="get" class="row g-3 align-items-end">
+
+            <div class="col-md-4">
+                <label class="form-label fw-bold">From Date</label>
+                <input type="date"
+                       name="fromDate"
+                       value="@ViewBag.FromDate"
+                       class="form-control" />
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label fw-bold">To Date</label>
+                <input type="date"
+                       name="toDate"
+                       value="@ViewBag.ToDate"
+                       class="form-control" />
+            </div>
+
+            <div class="col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary px-4">
+                    Filter
+                </button>
+
+                <a asp-action="Index" class="btn btn-outline-primary px-4">
+                    Reset
+                </a>
+            </div>
+
+        </form>
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-md-4">
+            <div class="dashboard-card">
+                <h6>Total Income</h6>
+                <h3 class="amount-income">
+                    ₱@ViewBag.TotalIncome.ToString("N2")
+                </h3>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="dashboard-card">
+                <h6>Total Expenses</h6>
+                <h3 class="amount-expense">
+                    ₱@ViewBag.TotalExpenses.ToString("N2")
+                </h3>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="dashboard-card">
+                <h6>Net Profit / Loss</h6>
+
+                @if (ViewBag.NetProfit >= 0)
+                {
+                    <h3 class="amount-income">
+                        ₱@ViewBag.NetProfit.ToString("N2")
+                    </h3>
+                }
+                else
+                {
+                    <h3 class="amount-expense">
+                        ₱@ViewBag.NetProfit.ToString("N2")
+                    </h3>
+                }
+            </div>
+        </div>
+
+    </div>
+
+</div>

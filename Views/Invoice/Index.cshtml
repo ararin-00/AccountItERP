@@ -1,0 +1,542 @@
+@model List<AccountItERP.Models.Invoice>
+
+@{
+    ViewData["Title"] = "Invoice Management";
+    var customerVendors = ViewBag.CustomerVendors as List<AccountItERP.Models.CustomerVendor> ?? new List<AccountItERP.Models.CustomerVendor>();
+
+    var paidTotals = ViewBag.InvoicePaidTotals as Dictionary<int, decimal> ?? new Dictionary<int, decimal>();
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dashboard.css" />
+}
+
+<div class="user-management-page">
+
+    <div class="page-title d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>Invoice Management</h2>
+            <p>Manage customer invoices and payment status.</p>
+        </div>
+
+        <button type="button"
+                class="btn btn-primary px-4"
+                data-bs-toggle="modal"
+                data-bs-target="#createInvoiceModal">
+            + Create Invoice
+        </button>
+    </div>
+
+    <div class="dashboard-card">
+
+    <form asp-action="Index"
+          method="get"
+          class="row g-3 mb-4 align-items-center">
+
+        <div class="col-md-9">
+            <input type="text"
+                   name="search"
+                   value="@ViewBag.Search"
+                   class="form-control"
+                   placeholder="Search invoice number, customers or status..." />
+        </div>
+
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit"
+                    class="btn btn-primary flex-fill">
+                Search
+            </button>
+
+            @if (!string.IsNullOrWhiteSpace(ViewBag.Search))
+            {
+                <a asp-action="Index"
+                   class="btn btn-outline-secondary">
+                    Clear
+                </a>
+            }
+        </div>
+
+    </form>
+
+        <div class="table-responsive">
+            <table class="table align-middle user-table">
+                <thead>
+                    <tr>
+                        <th>Invoice No.</th>
+                        <th>Customer/Vendor</th>
+                        <th>Invoice Date</th>
+                        <th>Due Date</th>
+                        <th>Total Amount</th>
+                        <th>Total Paid</th>
+                        <th>Remaining</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var invoice in Model)
+                    {
+                        var paid = paidTotals.ContainsKey(invoice.InvoiceID)
+                            ? paidTotals[invoice.InvoiceID]
+                            : 0;
+
+                        var remaining = invoice.TotalAmount - paid;
+
+                        <tr>
+                            <td><strong>@invoice.InvoiceNumber</strong></td>
+                            <td>@invoice.CustomerVendor?.Name</td>
+                            <td>@invoice.InvoiceDate.ToString("MMM dd, yyyy")</td>
+                            <td>@invoice.DueDate.ToString("MMM dd, yyyy")</td>
+
+                            <td>
+                                <span class="invoice-amount">
+                                    ₱@invoice.TotalAmount.ToString("N2")
+                                </span>
+                            </td>
+                            <td>
+                                ₱@paid.ToString("N2")
+                            </td>
+
+                            <td>
+                                ₱@remaining.ToString("N2")
+                            </td>
+
+                            <td>
+                                @if (invoice.Status == "Paid")
+                                {
+                                    <span class="invoice-status-paid">Paid</span>
+                                }
+                                else if (invoice.Status == "Cancelled")
+                                {
+                                    <span class="invoice-status-cancelled">Cancelled</span>
+                                }
+                                else
+                                {
+                                    <span class="invoice-status-pending">Pending</span>
+                                }
+                            </td>
+
+                            <td>
+                                <div class="d-flex justify-content-end gap-2">
+                                    <button type="button"
+                                            class="btn btn-outline-primary btn-sm px-3"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editInvoiceModal-@invoice.InvoiceID">
+                                        Edit
+                                    </button>
+
+                                    <a href="#"
+                                       class="btn btn-outline-danger btn-sm px-3 delete-btn"
+                                       data-url="@Url.Action("Delete", new { id = invoice.InvoiceID })">
+                                        Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+
+            </table>
+        </div>
+
+        @if (ViewBag.TotalPages > 1)
+        {
+            <div class="pagination-wrapper">
+                <div class="pagination-info">
+                    Page @ViewBag.CurrentPage of @ViewBag.TotalPages
+                </div>
+
+                <nav>
+                    <ul class="pagination custom-pagination mb-0">
+
+                        <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                            <a class="page-link"
+                               asp-action="Index"
+                               asp-route-page="@(ViewBag.CurrentPage - 1)"
+                               asp-route-search="@ViewBag.Search">
+                                Previous
+                            </a>
+                        </li>
+
+                        @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                <a class="page-link"
+                                   asp-action="Index"
+                                   asp-route-page="@i"
+                                   asp-route-search="@ViewBag.Search">
+                                    @i
+                                </a>
+                            </li>
+                        }
+
+                        <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                            <a class="page-link"
+                               asp-action="Index"
+                               asp-route-page="@(ViewBag.CurrentPage + 1)"
+                               asp-route-search="@ViewBag.Search">
+                                Next
+                            </a>
+                        </li>
+
+                    </ul>
+                </nav>
+            </div>
+        }
+
+    </div>
+
+</div>
+
+<!-- CREATE MODAL -->
+<div class="modal fade"
+     id="createInvoiceModal"
+     tabindex="-1"
+     aria-labelledby="createInvoiceModalLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content custom-modal">
+
+            <form asp-action="Create"
+                method="post"
+                class="confirm-form"
+                data-confirm-type="create">
+                @Html.AntiForgeryToken()
+
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title" id="createInvoiceModalLabel">
+                            Create Invoice
+                        </h5>
+                        <p class="modal-subtitle">
+                            Add a new customer invoice.
+                        </p>
+                    </div>
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close">
+                    </button>
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Customer/Vendor</label>
+                        <select name="CustomerVendorID" class="form-select" required>
+                            <option value="">Select customer/vendor</option>
+                            @foreach (var cv in customerVendors)
+                            {
+                                <option value="@cv.CustomerVendorID">@cv.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Invoice Number</label>
+                        <div class="form-control bg-light">
+                            Automatically generated when saved
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Invoice Date</label>
+                        <input type="date"
+                               name="InvoiceDate"
+                               class="form-control"
+                               required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Due Date</label>
+                        <input type="date"
+                               name="DueDate"
+                               class="form-control"
+                               required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Total Amount</label>
+                        <input type="number"
+                               name="TotalAmount"
+                               step="0.01"
+                               min="0"
+                               class="form-control"
+                               placeholder="Enter total amount"
+                               required />
+                    </div>
+
+
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input type="checkbox"
+                                name="IsInstallment"
+                                value="true"
+                                class="form-check-input installment-toggle"
+                                id="createIsInstallment"
+                                data-target="createInstallmentMonths" />
+
+                            <label class="form-check-label fw-bold"
+                                for="createIsInstallment">
+                                Installment Plan
+                            </label>
+                        </div>
+
+                        <input type="hidden" name="IsInstallment" value="false" />
+                    </div>
+
+                    <div class="mb-3 d-none"
+                        id="createInstallmentMonths">
+
+                        <label class="form-label fw-bold">
+                            Number of Installments
+                        </label>
+
+                        <select name="InstallmentMonths"
+                                class="form-select installment-months">
+
+                            <option value="">Select number of months</option>
+                            <option value="3">3 Months</option>
+                            <option value="6">6 Months</option>
+                            <option value="12">12 Months</option>
+                            <option value="24">24 Months</option>
+                        </select>
+                    </div>
+
+
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-outline-primary px-4"
+                            data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+
+                    <button type="submit"
+                            class="btn btn-primary px-4">
+                        Save Invoice
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<!-- EDIT MODALS - OUTSIDE TABLE -->
+@foreach (var invoice in Model)
+{
+    <div class="modal fade"
+         id="editInvoiceModal-@invoice.InvoiceID"
+         tabindex="-1"
+         aria-labelledby="editInvoiceModalLabel-@invoice.InvoiceID"
+         aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content custom-modal">
+
+                <form asp-action="Edit"
+                method="post"
+                class="confirm-form"
+                data-confirm-type="edit">
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden" name="InvoiceID" value="@invoice.InvoiceID" />
+                    <input type="hidden" name="InvoiceNumber" value="@invoice.InvoiceNumber" />
+
+                    <div class="modal-header">
+                        <div>
+                            <h5 class="modal-title" id="editInvoiceModalLabel-@invoice.InvoiceID">
+                                Edit Invoice
+                            </h5>
+                            <p class="modal-subtitle">
+                                Update this invoice record.
+                            </p>
+                        </div>
+
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close">
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Customer/Vendor</label>
+                            <select name="CustomerVendorID" class="form-select" required>
+                                @foreach (var cv in customerVendors)
+                                {
+                                    <option value="@cv.CustomerVendorID" selected="@(cv.CustomerVendorID == invoice.CustomerVendorID)">
+                                        @cv.Name
+                                    </option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Invoice Number</label>
+                            <input type="text"
+                                   value="@invoice.InvoiceNumber"
+                                   class="form-control"
+                                   readonly />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Invoice Date</label>
+                            <input type="date"
+                                   name="InvoiceDate"
+                                   value="@invoice.InvoiceDate.ToString("yyyy-MM-dd")"
+                                   class="form-control"
+                                   required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Due Date</label>
+                            <input type="date"
+                                   name="DueDate"
+                                   value="@invoice.DueDate.ToString("yyyy-MM-dd")"
+                                   class="form-control"
+                                   required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Total Amount</label>
+                            <input type="number"
+                                   name="TotalAmount"
+                                   value="@invoice.TotalAmount"
+                                   step="0.01"
+                                   min="0"
+                                   class="form-control"
+                                   required />
+                        </div>
+
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input type="checkbox"
+                                    name="IsInstallment"
+                                    value="true"
+                                    class="form-check-input installment-toggle"
+                                    id="editIsInstallment-@invoice.InvoiceID"
+                                    data-target="editInstallmentMonths-@invoice.InvoiceID"
+                                    checked="@invoice.IsInstallment" />
+
+                                <label class="form-check-label fw-bold"
+                                    for="editIsInstallment-@invoice.InvoiceID">
+                                    Installment Plan
+                                </label>
+                            </div>
+
+                            <input type="hidden" name="IsInstallment" value="false" />
+                        </div>
+
+                        <div class="mb-3 @(invoice.IsInstallment ? "" : "d-none")"
+                            id="editInstallmentMonths-@invoice.InvoiceID">
+
+                            <label class="form-label fw-bold">
+                                Number of Installments
+                            </label>
+
+                            <select name="InstallmentMonths"
+                                    class="form-select installment-months">
+
+                                <option value="">Select number of months</option>
+
+                                <option value="3"
+                                        selected="@(invoice.InstallmentMonths == 3)">
+                                    3 Months
+                                </option>
+
+                                <option value="6"
+                                        selected="@(invoice.InstallmentMonths == 6)">
+                                    6 Months
+                                </option>
+
+                                <option value="12"
+                                        selected="@(invoice.InstallmentMonths == 12)">
+                                    12 Months
+                                </option>
+
+                                <option value="24"
+                                        selected="@(invoice.InstallmentMonths == 24)">
+                                    24 Months
+                                </option>
+                            </select>
+                        </div>
+
+
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Status</label>
+                            <input type="text"
+                                   value="@invoice.Status"
+                                   class="form-control"
+                                   readonly />
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button"
+                                class="btn btn-outline-primary px-4"
+                                data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+
+                        <button type="submit"
+                                class="btn btn-primary px-4">
+                            Save Changes
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            document.querySelectorAll(".installment-toggle")
+                .forEach(function (toggle) {
+
+                    function updateInstallmentField() {
+                        const targetId = toggle.dataset.target;
+                        const container = document.getElementById(targetId);
+
+                        if (!container) return;
+
+                        const select =
+                            container.querySelector(".installment-months");
+
+                        if (toggle.checked) {
+                            container.classList.remove("d-none");
+                            select.required = true;
+                        } else {
+                            container.classList.add("d-none");
+                            select.required = false;
+                            select.value = "";
+                        }
+                    }
+
+                    toggle.addEventListener(
+                        "change",
+                        updateInstallmentField
+                    );
+
+                    updateInstallmentField();
+                });
+        });
+    </script>
+}
