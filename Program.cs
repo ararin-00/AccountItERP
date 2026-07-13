@@ -14,7 +14,7 @@ var connectionString =
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(
         connectionString,
-        ServerVersion.AutoDetect(connectionString)));
+        new MySqlServerVersion(new Version(8, 0, 0))));
 
 builder.Services.AddScoped<AuditService>();
 builder.Services.AddSession();
