@@ -127,6 +127,28 @@ namespace AccountItERP.Controllers
             });
         }
 
+        [HttpGet]
+        public async Task<IActionResult> TemporaryResetAdmin()
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == "admin");
+
+            if (user == null)
+            {
+                return Content("Admin account not found.");
+            }
+
+            user.Password = BCrypt.Net.BCrypt.HashPassword("Admin@123");
+            user.Status = "Active";
+            user.Role = "Administrator";
+
+            await _context.SaveChangesAsync();
+
+            return Content("Admin password reset successfully.");
+        }
+
+
+
 
 
         [HttpPost]
