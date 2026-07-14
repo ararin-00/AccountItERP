@@ -127,55 +127,6 @@ namespace AccountItERP.Controllers
             });
         }
 
-        [HttpGet]
-public async Task<IActionResult> TemporaryResetUsers()
-{
-    var users = await _context.Users.ToListAsync();
-
-    foreach (var user in users)
-    {
-        switch (user.Username.ToLower())
-        {
-            case "admin":
-                user.Password = BCrypt.Net.BCrypt.HashPassword("Admin123!");
-                user.Status = "Active";
-                break;
-
-            case "accountant":
-                user.Password = BCrypt.Net.BCrypt.HashPassword("Accountant123!");
-                user.Status = "Active";
-                break;
-
-            case "manager":
-                user.Password = BCrypt.Net.BCrypt.HashPassword("Manager123!");
-                user.Status = "Active";
-                break;
-
-            case "staff":
-                user.Password = BCrypt.Net.BCrypt.HashPassword("Staff123!");
-                user.Status = "Active";
-                break;
-
-            case "auditor":
-                user.Password = BCrypt.Net.BCrypt.HashPassword("Auditor123!");
-                user.Status = "Active";
-                break;
-
-            case "msantos":
-                user.Password = BCrypt.Net.BCrypt.HashPassword("Maria123!");
-                user.Status = "Active";
-                break;
-        }
-    }
-
-    await _context.SaveChangesAsync();
-
-    return Content("Passwords reset successfully.");
-}
-
-
-
-
 
         [HttpPost]
         [ValidateAntiForgeryToken]
